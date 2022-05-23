@@ -109,37 +109,18 @@ def get_noun_chunks(doc, sorted_doc):
             noun_chunks.append(chunk)
     return noun_chunks
 
-def remove_punctuation(sentence):
-    flag = True
-    s = sentence.text
-    s = s.replace('“', '')
-    s = s.replace('”', '')
-    while s[0] in punctuation or s[0]==' ':
-        s = s[1:]
-        if s[0]=='(':
-            s = s[next(i for i,c in s if c==')')+1:]
-    while s[-1] in punctuation or s[-1]==' ': #
-        if s[-1]!='-':
-            s = s[:-1]
-    return nlp(s)
-
-def get_that_expression(sentences):
+def get_prep_sentences(sentences):
     patterns=[
-    [{'OP': '*'}, {'POS': {'IN': ['VERB', 'AUX']}}, {'OP': '*'}, {'LOWER': {'IN': ['that', 'who', 'whose', 'which']}}, {'OP': '*'}, {'POS': 'NOUN'},
-    {'OP': '*'}, {'POS': 'VERB'}, {'OP': '*'}, {'POS': 'ADP'}, {'OP': '*'}, {'POS': 'NOUN'}, {'OP': '*'}, {'DEP': {'IN': ['dobj', 'iobj', 'pobj', 'obj']}}, {'OP': '*'},
-    {'LOWER': ','}, {'OP': '*'}],
 
-    [{'OP': '*'}, {'POS': {'IN': ['VERB', 'AUX']}}, {'OP': '*'}, {'DEP': 'prep'}, {'OP': '*'}, {'POS': 'NOUN'}, {'OP': '*'}, {'POS': 'NOUN'},
-    {'OP': '*'}, {'POS': 'VERB'}, {'OP': '*'}, {'POS': 'ADP'}, {'OP': '*'}, {'POS': 'NOUN'}, {'OP': '*'}, {'DEP': {'IN': ['dobj', 'iobj', 'pobj', 'obj']}}, {'OP': '*'},
-    {'LOWER': ','}, {'OP': '*'}],
+    [{'OP': '*'}, {'POS': {'IN': ['VERB', 'AUX']}}, {'OP': '*'}, {'DEP': 'prep'}, {'OP': '*'}, {'POS': 'NOUN'}, {'OP': '*'},
+    {'POS': 'VERB'}, {'OP': '*'}, {'DEP': {'IN': ['dobj', 'iobj', 'pobj', 'obj']}}, {'OP': '*'}],
 
-    [{'OP': '*'}, {'POS': {'IN': ['VERB', 'AUX']}}, {'OP': '*'}, {'POS': {'IN': ['CONJ', 'CCONJ', 'ADP']}}, {'OP': '*'}, {'POS': 'NOUN'},
-    {'OP': '*'}, {'POS': 'VERB'}, {'OP': '*'}, {'POS': 'ADP'}, {'OP': '*'}, {'POS': 'NOUN'}, {'OP': '*'}, {'DEP': {'IN': ['dobj', 'iobj', 'pobj', 'obj']}}, {'OP': '*'},
-    {'LOWER': ','}, {'OP': '*'}]
+    [{'OP': '*'}, {'POS': {'IN': ['VERB', 'AUX']}}, {'OP': '*'}, {'POS': {'IN': ['CONJ', 'CCONJ', 'ADP']}}, {'OP': '*'}, {'POS': 'NOUN'}, {'OP': '*'},
+    {'POS': 'VERB'}, {'OP': '*'}, {'DEP': {'IN': ['dobj', 'iobj', 'pobj', 'obj']}}, {'OP': '*'}]
     ]
 
     matcher = Matcher(nlp.vocab)
-    matcher.add("noun-phrases", patterns)
+    matcher.add("prep-sentences", patterns)
     expressions = []
     # call the matcher to find matches
     expressions = []
@@ -161,10 +142,10 @@ def get_verb_sentences(sentences):
     matcher = Matcher(nlp.vocab)
 
     patterns = [
-    [{'OP': '*'}, {'POS': 'ADJ'}, {"OP": '*'}, {'POS': 'VERB', 'OP':'+'}, {'OP': '*'}, {'POS': 'ADP'}, {'OP':'*'}, {'DEP': {'IN': ['dobj', 'iobj', 'pobj', 'obj']}}]
+    [{'OP': '*'}, {'POS': 'ADJ'}, {"OP": '*'}, {'POS': 'VERB', 'OP':'+'}, {'OP': '*'}, {'POS': 'ADP'}, {'OP':'*'}, {'DEP': {'IN': ['dobj', 'iobj', 'pobj', 'obj']}}, {'OP': '*'}]
     ]
 
-    matcher.add("wh_chunks", patterns)
+    matcher.add("verb_sentences", patterns)
     expressions = []
     for sentence in sentences:
         matches = matcher(sentence)
@@ -177,17 +158,15 @@ def get_verb_sentences(sentences):
                 expressions.append(match)
     return expressions
 
-def get_subj_sentences(sentences):
+def get_det_sentences(sentences):
 
-    #### WH expressions ####
     matcher = Matcher(nlp.vocab)
 
     patterns = [
-    [{'POS': {'IN': ['DET', 'NUM']}}, {'OP': '*'}, {'POS': 'NOUN'}, {'POS': {'IN': ['VERB', 'AUX']}},
-    {"OP": '*'}, {'DEP': {'IN': ['dobj', 'iobj', 'pobj', 'obj']}}, {'OP': '*'}]
+    [{'OP': '*'}, {'POS': {'IN': ['DET', 'NUM']}}, {'OP': '*'}, {'POS': 'NOUN'}, {'POS': {'IN': ['VERB', 'AUX']}}, {"OP": '*'}, {'DEP': {'IN': ['dobj', 'iobj', 'pobj', 'obj']}}, {'OP': '*'}]
     ]
 
-    matcher.add("subj_chunks", patterns)
+    matcher.add("subj_sentences", patterns)
     expressions = []
     for sentence in sentences:
         matches = matcher(sentence)

@@ -17,16 +17,16 @@ def negativities(doc, sentence_tokens, noun_chunks, places):
     i = 0
     places = [nlp(place)[0] for place in places if len(nlp(place))==1]
     for token in places:
-        if i<3:
+        if i<3 and token.has_vector:
             similar_list = most_similar(token, pos=token.pos_)[2:4]
-            similar_list = [word.capitalize() for word in similar_list]
+            similar_list = [word.capitalize() for word in similar_list if not word.isupper()]
             if token.text not in keywords.keys() and len(similar_list)>1:
                 keywords[token.text] = similar_list + [token.text]
                 i += 1
         else:
             break
     for token in doc:
-        if i<6:
+        if i<5:
             similar_list = most_similar(token, pos=token.pos_)[2:4]
             if token.text.lower() not in keywords.keys() and len(similar_list)>1 and len(token._.definition)>0:
                 keywords[token.text.lower()] = similar_list + [token._.definition[0].lower() + token._.definition[1:]]
@@ -52,21 +52,18 @@ def hesitation(sorted_doc, doc, sentence_tokens, noun_chunks, places):
 
     nouns = []
     for token in sorted_doc:
-        if token.pos_=='NOUN' and token.dep_!='compound' and token.ent_type_ not in ['PERSON', 'PRODUCT'] and token not in nouns:
+        if token.has_vector and token.pos_=='NOUN' and token.dep_!='compound' and token.ent_type_ not in ['PERSON', 'PRODUCT'] and token not in nouns:
             nouns.append(token)
 
     verb_sentence = get_verb_sentences(sentence_tokens)[0]
-    for sentence in sentence_tokens:
-        if verb_sentence.text in sentence.text:
-            sentence_tokens.remove(sentence)
-    chunk = next(chunk for chunk in noun_chunks if chunk.text in verb_sentence.text)
+    sentence_tokens.remove(verb_sentence)
+    for chunk in noun_chunks:
+        if chunk.text in verb_sentence.text:
+            noun_chunks.remove(chunk)
+    prep_sentence = get_prep_sentences(sentence_tokens)[0]
+    chunk = next(chunk for chunk in noun_chunks if chunk.text in prep_sentence.text)
+    sentence_tokens.remove(prep_sentence)
     noun_chunks.remove(chunk)
-    verb_sentence = remove_punctuation(verb_sentence)
-    that_sentence = get_that_expression(sentence_tokens)[0]
-    chunk = next(chunk for chunk in noun_chunks if chunk.text in that_sentence.text)
-    sentence_tokens.remove(that_sentence)
-    noun_chunks.remove(chunk)
-    that_sentence = remove_punctuation(that_sentence)
 
     expressions = ['I don\'t really know ', 'I\'m not sure of ', 'I\'m trying to remember ']
     r = randrange(0,3)
@@ -117,27 +114,27 @@ def hesitation(sorted_doc, doc, sentence_tokens, noun_chunks, places):
     r = randrange(0,3)
     hes_text += expressions[r]
 
-    expression = remove_punctuation(expression)
     hes_text += expression.text.capitalize() + '. '
 
-
     expression = verb_sentence
-    iadj = next(i for i,token in enumerate(expression) if token.pos_=='ADJ')
-    iverb = next(i for i,token in enumerate(expression) if token.pos_=='VERB' and i>iadj)
-    iadp = next(i for i,token in enumerate(expression) if token.pos_=='ADP' and i>iverb)
-    iobj = next(i for i,token in enumerate(expression) if token.dep_ in ['dobj', 'iobj', 'pobj', 'obj'] and i>iadp)
+    i = expression[0].i
+    iadj = next(token.i for token in expression if token.pos_=='ADJ')
+    iverb = next(token.i for token in expression if token.pos_=='VERB' and token.i>iadj)
+    iadp = next(token.i for token in expression if token.pos_=='ADP' and token.i>iverb)
+    iobj = next(token.i for token in expression if token.dep_ in ['dobj', 'iobj', 'pobj', 'obj'] and token.i>iadp)
+    obj = doc[iobj]
 
-    adjective = expression[iadj]
+    adjective = doc[iadj]
     sub_word = ''
-    if not expression[iadj-1].is_punct:
+    if not doc[iadj-1].is_punct:
         sub_word += ' '
     sub_word += adjective.text + ', ' + adjective.text + ', ' + adjective.text + ' '
-    hes_text += expression[:iadj].text + sub_word
-    hes_text += verb_sentence[iadj+1:iverb].text
-    if verb_sentence[iverb-1].text!=',':
+    hes_text += doc[i:iadj].text + sub_word
+    hes_text += doc[iadj+1:iverb].text
+    if doc[iverb-1].text!=',':
         hes_text += '...'
 
-    verb = expression[iverb]
+    verb = doc[iverb]
     inflection = verb.tag_
     similar_list = most_similar(verb, pos='VERB')
 
@@ -150,38 +147,36 @@ def hesitation(sorted_doc, doc, sentence_tokens, noun_chunks, places):
             if similar_verb!=verb.text and similar_verb not in verbs:
                 verbs.append(similar_verb)
                 i += 1
-    hes_text += ' ' + verbs[0] + '...no, '
-    #for i in range(1,len(verbs)-1):
-    #    hes_text += verbs[i] + '? '
-    hes_text += 'no: ' + verb.text
-    if expression[iverb+1].text not in punctuation:
+    hes_text += ' ' + verbs[0] + '...no, no: ' + verb.text
+    if doc[iverb+1].text not in punctuation:
         hes_text += ' '
-    hes_text += expression[iverb+1:iadp].text
+    hes_text += doc[iverb+1:iadp].text
 
     expressions = [', I don\'t really know in what way...', ', I guess...', ', maybe...']
     r = randrange(0,3)
     hes_text += expressions[r]
 
-    word = expression[iobj]
+    word = doc[iobj]
     similar_list = most_similar(word, pos=word.pos_)[2:5]
-    hes_text += expression[iadp:iobj].text + ' ' + similar_list[0] + '? '
+    hes_text += doc[iadp:iobj].text + ' ' + similar_list[0] + '? '
     for w in similar_list[1:]:
-        hes_text += expression[iadp:iobj].text + ' ' + w + '? '
-    hes_text += 'rather...more precisely...' + expression[iadp:iobj+1].text + '. '
+        hes_text += doc[iadp:iobj].text + ' ' + w + '? '
+    hes_text += 'rather...more precisely...' + doc[iadp:obj.right_edge.i].text
+    if not doc[obj.right_edge.i].is_punct:
+        hes_text += obj.right_edge.text
+    hes_text += '. '
 
-    sentence = that_sentence
-
-    iverb = next(i for i,token in enumerate(sentence) if token.pos_=='VERB')
-    iprep = next(i for i,token in enumerate(sentence) if (token.dep_=='prep' or token.text in ['that', 'who', 'whose', 'which'] or token.pos_ in ['CONJ', 'CCONJ', 'ADP']) and i>iverb)
-    inoun = next(i for i,token in enumerate(sentence) if token.pos_=='NOUN' and i>iprep)
-    iverb2 = next(i for i,token in enumerate(sentence) if token.pos_ in ['VERB', 'AUX'] and i>inoun)
-    iprep2 = next(i for i,token in enumerate(sentence) if token.dep_=='prep' and i>iverb2)
-    iobj = next(i for i,token in enumerate(sentence) if token.dep_ in ['dobj', 'iobj', 'pobj', 'obj'] and i>iprep2)
-    icomma = next(i for i,token in enumerate(sentence) if token.text.lower()==',' and i>iobj)
-
-    adjectives = related_adjectives(sentence[inoun], noun_chunks)[:2]
+    sentence = prep_sentence
+    i = sentence[0].i
+    iverb = next(token.i for token in sentence if token.pos_=='VERB')
+    iprep = next(token.i for token in sentence if (token.dep_=='prep' or token.pos_ in ['CONJ', 'CCONJ', 'ADP']) and token.i>iverb)
+    inoun = next(token.i for token in sentence if token.pos_=='NOUN' and token.i>iprep)
+    iverb2 = next(token.i for token in sentence if token.pos_ in ['VERB', 'AUX'] and token.i>inoun)
+    iobj = next(token.i for token in sentence if token.dep_ in ['dobj', 'iobj', 'pobj', 'obj'] and token.i>iverb2)
+    obj = doc[iobj]
+    adjectives = related_adjectives(doc[inoun], noun_chunks)[:2]
     if len(adjectives)<2:
-        similar_list = most_similar(sentence[inoun], pos='ADJ')[:2-len(adjectives)]
+        similar_list = most_similar(doc[inoun], pos='ADJ')[:2-len(adjectives)]
         for word in similar_list:
             adjectives.append(word)
     similar_list = []
@@ -189,32 +184,27 @@ def hesitation(sorted_doc, doc, sentence_tokens, noun_chunks, places):
         adjective = nlp(adjective)[0]
         similar_list.append(most_similar(adjective, pos='ADJ')[0])
 
-    hes_text += sentence[:iverb+1].text + ', yes, that\'s right, ' + sentence[iverb:iprep+1].text.lower() + ', no doubt, ' + sentence[iprep+1:inoun+1].text + ' '
+    hes_text += doc[i:iverb+1].text + ', yes, that\'s right, ' + doc[iverb:iprep+1].text.lower() + ', no doubt, ' + doc[iprep+1:inoun+1].text + ' '
     if len(adjectives)>1 and len(similar_list)>1:
         hes_text += '(' + adjectives[0] + ' or ' + similar_list[0] + '?) ' + '(' + adjectives[1] + ' or ' + similar_list[1] + '?) '
-    hes_text += sentence[inoun+1:iprep2].text + ', probably, ' + sentence[iprep2:icomma].text + '... '
+    hes_text += doc[inoun+1:iverb2].text + ' probably ' + doc[iverb2:obj.right_edge.i].text + '. '
 
     #Last paraghraph
-    sentence = get_subj_sentences(sentence_tokens)[0]
+    sentence = get_det_sentences(sentence_tokens)[0]
     chunk = next(chunk for chunk in noun_chunks if chunk.text in sentence.text)
-    for s in sentence_tokens:
-        if sentence.text in s.text:
-            sentence_tokens.remove(s)
-    noun_chunks.remove(chunk)
-    sentence = remove_punctuation(sentence)
 
     hes_text += 'I rather think that '
-    idet = next(i for i,token in enumerate(sentence) if token.pos_ in ['DET', 'NUM'])
-    inoun = next(i for i,token in enumerate(sentence) if token.pos_=='NOUN' and i>idet)
-    iverb = next(i for i,token in enumerate(sentence) if token.pos_ in ['VERB', 'AUX'] and i>inoun)
-    iobj = next(i for i,token in enumerate(sentence) if token.dep_ in ['dobj', 'pobj', 'iobj', 'obj'] and i>iverb)
-
-    hes_text += sentence[idet:iverb].text[0].lower() + sentence[idet:iverb].text[1:]
-    if sentence[iverb-1].text!=',':
+    idet = next(token.i for token in sentence if token.pos_ in ['DET', 'NUM'])
+    inoun = next(token.i for token in sentence if token.pos_=='NOUN' and token.i>idet)
+    iverb = next(token.i for token in sentence if token.pos_ in ['VERB', 'AUX'] and token.i>inoun)
+    iobj = next(token.i for token in sentence if token.dep_ in ['dobj', 'pobj', 'iobj', 'obj'] and token.i>iverb)
+    obj = doc[iobj]
+    hes_text += doc[idet:iverb].text[0].lower() + doc[idet:iverb].text[1:]
+    if doc[iverb-1].text!=',':
         hes_text += '...'
     else:
         hes_text += ' '
     hes_text += 'I don\'t know...'
-    hes_text += sentence[iverb:iobj+1].text + '? But how?'
+    hes_text += doc[iverb:obj.right_edge.i].text + '?'
 
     return(hes_text)
