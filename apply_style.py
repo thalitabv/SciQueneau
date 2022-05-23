@@ -39,10 +39,9 @@ def prepare_text(text):
     sentence_scores = scores(sentence_tokens, dict(word_frequencies))
     sentence_tokens = sorted(sentence_tokens, key=lambda x: sentence_scores[x], reverse=True)
 
-    noun_chunks = get_noun_chunks(sentence_tokens)
-
-    #sub_doc = [token for token in doc if (len(token.text)>2) and (token.text.lower() not in stopwords) and (token.text not in punctuation) and token.pos_ in ['NOUN', 'ADJ'] and token.dep_!='compound' and token.ent_type_ not in ['PERSON', 'PRODUCT']]
     sorted_doc = sorted(sub_doc, key=lambda x: x._.freq, reverse=True)
+
+    noun_chunks = get_noun_chunks(doc, sorted_doc)
 
     # Get places (organizations or geographic) ordered by frequency
     places = {}
