@@ -73,7 +73,7 @@ def get_definition(word):
         meaning = data[word.lemma_]
     else:
         return ''
-    meaning = meaning.split(';')[0]
+    meaning = meaning[0].split(';')[0]
     return meaning
 
 def get_frequencies(doc):
