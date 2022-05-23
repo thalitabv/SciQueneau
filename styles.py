@@ -152,7 +152,7 @@ def hesitation(sorted_doc, doc, sentence_tokens, noun_chunks, places):
         hes_text += ' '
     hes_text += doc[iverb+1:iadp].text
 
-    expressions = [', I don\'t really know in what way...', ', I guess...', ', maybe...']
+    expressions = [', I don\'t really know...', ', I guess...', ', maybe...']
     r = randrange(0,3)
     hes_text += expressions[r]
 
@@ -169,10 +169,10 @@ def hesitation(sorted_doc, doc, sentence_tokens, noun_chunks, places):
     sentence = prep_sentence
     i = sentence[0].i
     iverb = next(token.i for token in sentence if token.pos_=='VERB')
-    iprep = next(token.i for token in sentence if (token.dep_=='prep' or token.pos_ in ['CONJ', 'CCONJ', 'ADP']) and token.i>iverb)
+    iprep = next(token.i for token in sentence if token.dep_=='prep' and token.i>iverb)
     inoun = next(token.i for token in sentence if token.pos_=='NOUN' and token.i>iprep)
-    iverb2 = next(token.i for token in sentence if token.pos_ in ['VERB', 'AUX'] and token.i>inoun)
-    iobj = next(token.i for token in sentence if token.dep_ in ['dobj', 'iobj', 'pobj', 'obj'] and token.i>iverb2)
+    iverb2 = next(token.i for token in sentence if (token.pos_ in ['VERB', 'AUX']) and token.i>inoun)
+    iobj = next(token.i for token in sentence if (token.dep_ in ['dobj', 'iobj', 'pobj', 'obj']) and token.i>iverb2)
     obj = doc[iobj]
     adjectives = related_adjectives(doc[inoun], noun_chunks)[:2]
     if len(adjectives)<2:
