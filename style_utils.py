@@ -40,8 +40,8 @@ def related_adjectives(noun, noun_chunks):
         matches = filter_spans(spans)
         for match in matches:
             idx = next(idx for idx,token in enumerate(match) if token.text==noun.text)
-            if match[idx-1].text not in adjectives:
-                adjectives.append(match[idx-1].text)
+            if match[:idx].text not in adjectives:
+                adjectives.append(match[:idx].text)
     return adjectives
 
 def most_similar(word, pos, count = 200):
@@ -73,7 +73,10 @@ def get_definition(word):
         meaning = data[word.lemma_]
     else:
         return ''
-    meaning = meaning[0].split(';')[0]
+    if isinstance(meaning, list):
+        meaning = meaning[0]
+    meaning = meaning.split('.')[0]
+    meaning = meaning.split(';')[0]
     return meaning
 
 def get_frequencies(doc):
