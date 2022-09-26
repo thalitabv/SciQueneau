@@ -112,53 +112,6 @@ def get_noun_chunks(doc, sorted_doc):
             noun_chunks.append(chunk)
     return noun_chunks
 
-"""
-def get_noun_chunks(sentences):
-
-    patterns=[
-
-    #[{'DEP': {'IN': ['amod', 'advmod']}, 'OP':'*'},{'POS': 'DET', 'OP': '*'}, {'DEP':'attr', 'OP': '*'}, {'POS': 'NOUN'}],
-
-    [{'DEP': 'predet', 'OP': '*'}, {'POS': {'IN':['DET','NUM']}, 'OP':'*'}, {'DEP': {'IN': ['quantmod','nummod']}, 'OP':'*'}, {'LOWER': {'IN': ['-', '–']}, 'OP': '*'},
-    {'DEP': {'IN': ['amod', 'advmod', 'npadvmod']}, 'OP':'*'},{'LOWER': {'IN': ['-', '–']}, 'OP': '*'}, {'DEP': 'conj', 'OP': '*'}, {'DEP': {'IN': ['amod', 'advmod']}, 'OP': '*'},
-    {'LOWER': {'IN': ['-', '–']}, 'OP': '*'}, {'DEP': 'conj', 'OP': '*'}, {'POS': 'ADJ', 'OP':'*'}, {'LOWER': {'IN': ['-', '–']}, 'OP': '*'}, {'DEP': 'compound', 'OP': '*'},
-    {'POS': 'NOUN'}],
-
-    [{'DEP': 'predet', 'OP': '*'}, {'POS': {'IN':['DET','NUM']}, 'OP':'*'}, {'DEP': {'IN': ['quantmod','nummod', 'np']}, 'OP':'*'}, {'LOWER': {'IN': ['-', '–']}, 'OP': '*'},
-    {'ENT_TYPE':'QUANTITY', 'OP':'*'},{'LOWER': {'IN': ['-', '–']}, 'OP': '*'}, {'DEP': {'IN': ['amod', 'advmod']}, 'OP':'*'},{'LOWER': {'IN': ['-', '–']}, 'OP': '*'},
-    {'DEP': 'conj', 'OP': '*'}, {'DEP': {'IN': ['amod', 'advmod']}, 'OP': '*'}, {'LOWER': {'IN': ['-', '–']}, 'OP': '*'}, {'DEP': 'conj', 'OP': '*'}, {'POS': 'ADJ', 'OP':'*'},
-    {'LOWER': {'IN': ['-', '–']}, 'OP': '*'}, {'DEP': 'compound', 'OP': '*'}, {'POS': 'NOUN'}],
-
-    [{'DEP': 'predet', 'OP': '*'}, {'POS': {'IN':['DET','NUM']}, 'OP':'*'}, {'DEP': {'IN': ['quantmod','nummod']}, 'OP':'*'}, {'LOWER': {'IN': ['-', '–']}, 'OP': '*'},
-    {'ENT_TYPE':'QUANTITY', 'OP':'*'},{'LOWER': {'IN': ['-', '–']}, 'OP': '*'}, {'DEP': {'IN': ['amod', 'advmod']}, 'OP':'*'},{'LOWER': {'IN': ['-', '–']}, 'OP': '*'},
-    {'DEP': 'conj', 'OP': '*'}, {'DEP': {'IN': ['amod', 'advmod']}, 'OP': '+'}, {'LOWER': {'IN': ['-', '–']}, 'OP': '*'}, {'DEP': 'conj', 'OP': '*'}, {'DEP': 'compound', 'OP': '*'},
-    {'POS': 'NOUN'}],
-
-    [{'DEP': 'predet', 'OP': '*'}, {'POS': {'IN':['DET','NUM']}, 'OP':'*'}, {'DEP': {'IN': ['quantmod','nummod']}, 'OP':'*'}, {'LOWER': {'IN': ['-', '–']}, 'OP': '*'},
-    {'ENT_TYPE':'QUANTITY', 'OP':'*'},{'LOWER': {'IN': ['-', '–']}, 'OP': '*'}, {'DEP': {'IN': ['amod', 'advmod']}, 'OP':'*'}, {'LOWER': {'IN': ['-', '–']}, 'OP': '*'},
-    {'DEP': 'conj', 'OP': '*'}, {'DEP': {'IN': ['amod', 'advmod']}, 'OP': '+'}, {'DEP': 'conj', 'OP': '*'}, {'LOWER': {'IN': ['-', '–']}, 'OP': '*'}, {'DEP': 'compound', 'OP': '*'}, {'POS': 'NOUN'}]
-
-    ]
-    # Add pattern to matcher
-    matcher = Matcher(nlp.vocab)
-    matcher.add("noun-phrases", patterns)
-    expressions = []
-    # call the matcher to find matches
-    expressions = []
-    for sentence in sentences:
-        matches = matcher(sentence)
-        spans = []
-        for match_id, start, end in matches:
-            string_id = nlp.vocab.strings[match_id]  # Get string representation
-            spans.append(sentence[start:end])  # The matched span
-        matches = filter_spans(spans)
-        for match in matches:
-            if match not in expressions and len(match)>1:
-                expressions.append(match)
-
-    return expressions
-"""
-
 def get_prep_sentences(sentences):
     patterns=[
 
@@ -211,7 +164,7 @@ def get_det_sentences(sentences):
     matcher = Matcher(nlp.vocab)
 
     patterns = [
-    [{'OP': '*'}, {'POS': {'IN': ['DET', 'NUM']}}, {'OP': '*'}, {'POS': 'NOUN'}, {'POS': {'IN': ['VERB', 'AUX']}}, {"OP": '*'}, {'DEP': {'IN': ['dobj', 'iobj', 'pobj', 'obj']}}, {'OP': '*'}]
+    [{'OP': '*'}, {'DEP': 'nsubj'}, {'POS': {'IN': ['VERB', 'AUX']}}, {'OP': '*'}, {'DEP': {'IN': ['dobj', 'iobj', 'pobj', 'obj']}}]
     ]
 
     matcher.add("subj_sentences", patterns)
