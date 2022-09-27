@@ -153,9 +153,9 @@ def hesitation(sorted_doc, doc, sentence_tokens, noun_chunks, places):
 
     word = doc[iobj]
     similar_list = most_similar(word, pos=word.pos_)[2:5]
-    hes_text += doc[iadp:iobj].text + ' ' + similar_list[0] + '? '
+    hes_text += doc[iadp:iobj].text + ' ' + similar_list[0] + '?'
     for w in similar_list[1:]:
-        hes_text += doc[iadp:iobj].text + ' ' + w + '? '
+        hes_text += ' ' + w + '? '
     hes_text += 'rather...more precisely...' + doc[iadp:obj.right_edge.i].text
     if not doc[obj.right_edge.i].is_punct:
         hes_text += ' ' + obj.right_edge.text
@@ -185,15 +185,14 @@ def hesitation(sorted_doc, doc, sentence_tokens, noun_chunks, places):
 
     hes_text += doc[i:iverb+1].text + ', yes, that\'s right, ' + doc[iverb:iprep+1].text.lower() + ', no doubt, ' + doc[iprep+1:inoun+1].text + ' '
     if len(adjectives)>1 and len(similar_list)>1:
-        hes_text += '(' + adjectives[0] + ' or ' + similar_list[0] + '?) ' + '(' + adjectives[1] + ' or ' + similar_list[1] + '?) '
-    hes_text += doc[inoun+1:iverb2].text + ' probably ' + doc[iverb2:obj.right_edge.i+1].text + '. '
+        hes_text += '(' + adjectives[0] + ' or ' + similar_list[0] + '?) ' + '(' + adjectives[1] + ' or ' + similar_list[1] + '?) Anyway...'
+    hes_text += doc[iverb:iverb2].text + '...probably...' + doc[iverb2:obj.right_edge.i+1].text + '. '
 
     #Last paraghraph
     sentence = get_det_sentences(sentence_tokens)[0]
-    hes_text += 'I rather think that '
+    hes_text += 'I rather think that...'
     iroot = sentence.root.i
-    text = doc[sentence[0].i:iroot].text.strip()
-    hes_text += text[0].lower() + text[1:]
+    hes_text += doc[sentence[0].i:iroot].text.strip(" ()\"")
     if doc[iroot-1].text!=',':
         hes_text += '...'
     else:

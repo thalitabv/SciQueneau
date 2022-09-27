@@ -102,7 +102,7 @@ def scores(sentence_tokens, word_frequencies):
                     sentence_scores[sent]=word_frequencies[word.text.lower()]
                 else:
                     sentence_scores[sent]+=word_frequencies[word.text.lower()]
-    return sentence_scores
+    return [sentence_scores[sent] for sent in sentence_scores.keys()]
 
 def get_noun_chunks(doc, sorted_doc):
     noun_chunks = []
@@ -178,4 +178,4 @@ def get_det_sentences(sentences):
         for match in matches:
             if match not in expressions and len(match)>1:
                 expressions.append(match)
-    return expressions
+    return sorted(expressions)

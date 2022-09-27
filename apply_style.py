@@ -29,7 +29,10 @@ def prepare_text(text):
 
     sentence_tokens = [sent for sent in doc.sents if len(sent)>1]
     sentence_scores = scores(sentence_tokens, dict(word_frequencies))
-    sentence_tokens = sorted(sentence_tokens, key=lambda x: sentence_scores[x], reverse=True)
+    sentence_idx = sorted(range(len(sentence_scores)), key = lambda i: sentence_scores[i])[-20:]
+    #sentence_idx = sorted(sentence_idx)
+    sentence_tokens = [sentence_tokens[i] for i in sentence_idx]
+    #sentence_tokens = sorted(sentence_tokens, key=lambda x: sentence_scores[x], reverse=True)
 
     sorted_doc = sorted(sub_doc, key=lambda x: x._.freq, reverse=True)
 
