@@ -17,7 +17,7 @@ def negativities(doc, sentence_tokens, noun_chunks, places):
     i = 0
     places = [nlp(place)[0] for place in places if len(nlp(place))==1]
     for token in places:
-        if i<3 and token.has_vector:
+        if i<1 and token.has_vector:
             similar_list = most_similar(token, pos=token.pos_)[2:4]
             similar_list = [word.capitalize() for word in similar_list if not word.isupper()]
             if token.text not in keywords.keys() and len(similar_list)>1:
