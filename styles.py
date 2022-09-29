@@ -11,33 +11,46 @@ stopwords=list(STOP_WORDS)
 Negativities
 """
 def negativities(doc, sentence_tokens, noun_chunks, places):
-    neg = ["It was neither ", ", nor ", ", but "]
+    neg = ["It was neither", ", nor", ", but "]
     neg_text = ''
     keywords = {}
     i = 0
     places = [nlp(place)[0] for place in places if len(nlp(place))==1]
     for token in places:
         if i<1 and token.has_vector:
-            similar_list = most_similar(token, pos=token.pos_)[2:4]
-            similar_list = [word.capitalize() for word in similar_list if not word.isupper()]
+            similar_list = most_similar(token, pos=token.pos_)[1:3]
+            similar_list = [" " + word.capitalize() for word in similar_list]
             if token.text not in keywords.keys() and len(similar_list)>1:
                 keywords[token.text] = similar_list + [token.text]
                 i += 1
         else:
             break
     for token in doc:
-        if i<5:
-            similar_list = most_similar(token, pos=token.pos_)[2:4]
-            if token.text.lower() not in keywords.keys() and len(similar_list)>1 and len(token._.definition)>0:
-                keywords[token.text.lower()] = similar_list + [token._.definition[0].lower() + token._.definition[1:]]
+        if i<4:
+            similar_list = most_similar(token, pos=token.pos_)[3:5]
+            similar_list = [(" " + word) for word in similar_list]
+            if token.text not in keywords.keys() and len(similar_list)>1 and len(token._.definition)>0:
+                keywords[token.text] = similar_list + [token._.definition[0].lower() + token._.definition[1:]]
                 i += 1
-        elif i<10:
-            similar_list = most_similar(token, pos=token.pos_)[2:4]
+        if i<10:
             chunks = sorted([chunk for chunk in noun_chunks if token.text in chunk.text], key=len, reverse=True)
-            if token.text.lower() not in keywords.keys() and len(similar_list)>1 and len(chunks)>0:
-                keywords[token.text.lower()] = similar_list + [chunks[0].text[0].lower() + chunks[0].text[1:]]
-                noun_chunks.remove(chunks[0])
-                i += 1
+            if chunks:
+                valid_chunk = True
+                chunk = chunks[0]
+                noun_chunks.remove(chunk)
+                similar_chunks = ["", ""]
+                for tk in chunk:
+                    similar_list = most_similar(tk, pos=tk.pos_)[2:4] if not tk.is_stop else [tk.text, tk.text]
+                    if tk.is_title:
+                        similar_list = [word.capitalize() for word in similar_list]
+                    if len(similar_list)>1:
+                        similar_chunks[0] += ' ' + similar_list[0] if similar_list[0][0] not in ["’", "''"] else similar_list[0]
+                        similar_chunks[1] += ' ' + similar_list[1] if similar_list[1][0] not in ["’", "''"] else similar_list[1]
+                    else:
+                        valid_chunk = False
+                if valid_chunk and token.text not in keywords.keys():
+                    keywords[token.text] = [similar_chunks[0], similar_chunks[1], chunk.text]
+                    i+= 1
         else:
             break
     for word in keywords.keys():
@@ -147,7 +160,7 @@ def hesitation(sorted_doc, doc, sentence_tokens, noun_chunks, places):
         hes_text += ' '
     hes_text += doc[iverb+1:iadp].text
 
-    expressions = [', I don\'t really know...', ', I guess...', ', maybe...']
+    expressions = [", I don't really know...", ", I'm still on the fence...", "I guess..."]
     r = randrange(0,3)
     hes_text += expressions[r]
 

@@ -60,8 +60,10 @@ def most_similar(word, pos, count = 200):
     similar_list = []
     for keyword in df['keyword'].tolist():
         token = nlp(keyword)[0]
-        if token.lemma_ not in similar_list and token.lemma_ not in stopwords and token.pos_==pos and token.lemma_ not in word.text.lower():
-            similar_list.append(token.lemma_)
+        #if token.lemma_ not in similar_list and token.lemma_ not in stopwords and token.pos_==pos and token.lemma_ not in word.text.lower():
+        if token.text not in similar_list and not token.is_stop and token.pos_==pos and token.text not in word.text:
+            #similar_list.append(token.lemma_)
+            similar_list.append(token.text)
 
     return similar_list
 

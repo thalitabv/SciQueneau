@@ -37,7 +37,11 @@ def prepare_text(text):
     sorted_doc = sorted(sub_doc, key=lambda x: x._.freq, reverse=True)
 
     #noun_chunks = get_noun_chunks(doc, sorted_doc)
-    noun_chunks = [nc for nc in doc.noun_chunks if len(nc)>1 and not nc[0].is_quote and not nc[0].is_bracket]
+    noun_chunks = []
+    for chunk in doc.noun_chunks:
+        if len(chunk)>1 and not chunk[0].is_quote and not chunk[0].is_bracket and chunk.text not in [c.text for c in noun_chunks]:
+            noun_chunks.append(chunk)
+    #noun_chunks = [nc for nc in doc.noun_chunks if len(nc)>1 and not nc[0].is_quote and not nc[0].is_bracket]
     # Get places ordered by frequency
     places = {}
     for ent in doc.ents:
